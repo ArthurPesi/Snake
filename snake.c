@@ -8,11 +8,12 @@
 #define RIGHT 0x44
 
 struct Snake {
-    int position[16][2];
     int head;
     int tail;
     int size;
     int direction[2];
+    int positionSize;
+    int position[][2];
 };
 
 struct Game{
@@ -52,7 +53,7 @@ void renderFrame(struct Game *frame) {
 }
 
 void sortApplePosition(struct Game *game) {
-    srand(time(NULL));
+    srand(time(NULL)); //nao nascer dentro da cobra
     game->apple[0] = (rand() % (game->mapSize - 3)) + 1;
     game->apple[1] = (rand() % (game->mapSize - 3)) + 1;
 }
@@ -74,17 +75,18 @@ void moveSnake(struct Snake *snake) {
     int dir[2];
     dir[0] = snake->direction[0] + snake->position[snake->head][0];
     dir[1] = snake->direction[1] + snake->position[snake->head][1];
-    int positionSize = sizeof(snake->position)/sizeof(snake->position[0]);
-    snake->head = (snake->head + 1) % positionSize;
-    snake->tail = (snake->tail + 1) % positionSize;
+    snake->head = (snake->head + 1) % snake->positionSize;
+    snake->tail = (snake->tail + 1) % snake->positionSize;
     snake->position[snake->head][0] = dir[0];
     snake->position[snake->head][1] = dir[1];
 }
 
 struct Game *initializeGame() {
     struct Game *newGame = (struct Game*)calloc(sizeof(struct Game),1);
-    newGame->snake = (struct Snake*)calloc(sizeof(struct Snake),1);
     newGame->mapSize = sizeof(newGame->map)/sizeof(newGame->map[0]);
+    int snakeMaxSize = newGame->mapSize * newGame->mapSize * 2;
+    newGame->snake = (struct Snake*)calloc(sizeof(struct Snake) + snakeMaxSize,1);
+    newGame->snake->positionSize = snakeMaxSize;
     for(int i = 0; i < newGame->mapSize; i++) {
         for(int j = 0; j < newGame->mapSize; j++) {
             if(j == 0 || i == 0 || j == newGame->mapSize -1 || i == newGame->mapSize -1) {
