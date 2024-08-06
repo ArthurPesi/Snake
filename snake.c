@@ -41,6 +41,7 @@ void renderFrame(struct Game *frame) {
         }
         printf("\n");
     }
+    printf("%d",frame->snake->head);
 }
 
 void sortApplePosition(struct Game *game) {
@@ -75,26 +76,40 @@ int moveSnake(struct Game *frame) {
         snake->direction[0] = 0;
         snake->direction[1] = 1;
     }
-    int tailX = snake->position[snake->tail][0];
-    int tailY = snake->position[snake->tail][1];
-    frame->map[tailX][tailY] = ' ';
-    int dir[2];
+    
+    int headX = snake->position[snake->head][0];
+    int headY = snake->position[snake->head][1];
+    int appleX = frame->apple[0];
+    int appleY = frame->apple[1];
+
+    if(headX == appleX && headY == appleY) {
+        sortApplePosition(frame);
+    } else {
+        int tailX = snake->position[snake->tail][0];
+        int tailY = snake->position[snake->tail][1];
+        frame->map[tailX][tailY] = ' ';
+        snake->tail = (snake->tail + 1) % snake->positionSize;
+    }
+    
+    int dir[2]; 
     dir[0] = snake->direction[0] + snake->position[snake->head][0];
     dir[1] = snake->direction[1] + snake->position[snake->head][1];
+
     snake->head = (snake->head + 1) % snake->positionSize;
-    snake->tail = (snake->tail + 1) % snake->positionSize;
     snake->position[snake->head][0] = dir[0];
     snake->position[snake->head][1] = dir[1];
     int gameOver = gameover(frame);
+
     frame->map[dir[0]][dir[1]] = 'S';
+    
     return gameOver;
 }
 
 struct Game *initializeGame() {
     struct Game *newGame = (struct Game*)calloc(sizeof(struct Game),1);
     newGame->mapSize = sizeof(newGame->map)/sizeof(newGame->map[0]);
-    int snakeMaxSize = newGame->mapSize * newGame->mapSize * 2;
-    newGame->snake = (struct Snake*)calloc(sizeof(struct Snake) + snakeMaxSize,1);
+    int snakeMaxSize = newGame->mapSize * newGame->mapSize;
+    newGame->snake = (struct Snake*)calloc(sizeof(struct Snake) + snakeMaxSize * sizeof(int) * 2,1);
     newGame->snake->positionSize = snakeMaxSize;
     for(int i = 0; i < newGame->mapSize; i++) {
         for(int j = 0; j < newGame->mapSize; j++) {
@@ -129,12 +144,13 @@ void delayFrame() {
 
 int main() {
     struct Game *game = initializeGame();
+    renderFrame(game);
     while(1) {
-        renderFrame(game);
         delayFrame();
         if(moveSnake(game)) {
             break;
         }
+        renderFrame(game);
     }
     free(game->snake);
     free(game);
