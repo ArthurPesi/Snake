@@ -70,7 +70,7 @@ int gameover(struct Game *currFrame) {
     const struct Snake *snake = currFrame->snake;
     const int x = snake->position[snake->head][0];
     const int y = snake->position[snake->head][1];
-    if(currFrame->map[x][y] == '|') {
+    if(currFrame->map[x][y] == '|' || currFrame->map[x][y] == 'S') {
         return 1;
     } //se a cobra encostar em si mesma
     return 0;
