@@ -44,10 +44,25 @@ void renderFrame(struct Game *frame) {
     printf("%d",frame->snake->head);
 }
 
+int appleCollision(struct Game *game) {
+    const int tail = game->snake->tail;
+    const int head = game->snake->head;
+    const int appleX = game->apple[0];
+    const int appleY = game->apple[1];
+    for(int i = tail; i <= head; i++) {
+        if(appleX == game->snake->position[i][0] && appleY == game->snake->position[i][1]) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 void sortApplePosition(struct Game *game) {
     srand(time(NULL)); //nao nascer dentro da cobra
-    game->apple[0] = (rand() % (game->mapSize - 3)) + 1;
-    game->apple[1] = (rand() % (game->mapSize - 3)) + 1;
+    do {
+        game->apple[0] = (rand() % (game->mapSize - 3)) + 1;
+        game->apple[1] = (rand() % (game->mapSize - 3)) + 1;
+    } while(appleCollision(game));
     game->map[game->apple[0]][game->apple[1]] = '6';
 }
 
