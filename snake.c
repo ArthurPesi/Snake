@@ -41,7 +41,6 @@ void renderFrame(struct Game *frame) {
         }
         printf("\n");
     }
-    printf("%d",frame->snake->head);
 }
 
 int appleCollision(struct Game *game) {
@@ -76,18 +75,42 @@ int gameover(struct Game *currFrame) {
     return 0;
 }
 
+int comparePreviousState(struct Snake *snake) {
+    const int head = snake->head;
+    const int prev = head - 1;
+    if(head == snake->tail) {
+        return 0;
+    }
+    const int deltaX = snake->position[prev][0] - snake->position[head][0];
+    const int deltaY = snake->position[prev][1] - snake->position[head][1];
+    if(deltaX == -1 && deltaY == 0) {
+        return UP;
+    }
+    if(deltaX == 0 && deltaY == -1) {
+        return LEFT;
+    }
+    if(deltaX == 1 && deltaY == 0) {
+        return DOWN;
+    }
+    if(deltaX == 0 && deltaY == 1) {
+        return RIGHT;
+    }
+}
+
 int moveSnake(struct Game *frame) {
     struct Snake *snake = frame->snake;
-    if(GetAsyncKeyState(UP)) {
+
+    int forbiddenDir = comparePreviousState(snake);
+    if(GetAsyncKeyState(UP) && forbiddenDir != UP) {
         snake->direction[0] = -1;
         snake->direction[1] = 0;
-    } else if (GetAsyncKeyState(LEFT)) {
+    } else if (GetAsyncKeyState(LEFT) && forbiddenDir != LEFT) {
         snake->direction[0] = 0;
         snake->direction[1] = -1;
-    } else if (GetAsyncKeyState(DOWN)) {
+    } else if (GetAsyncKeyState(DOWN) && forbiddenDir != DOWN) {
         snake->direction[0] = 1;
         snake->direction[1] = 0;
-    } else if (GetAsyncKeyState(RIGHT)) {
+    } else if (GetAsyncKeyState(RIGHT) && forbiddenDir != RIGHT) {
         snake->direction[0] = 0;
         snake->direction[1] = 1;
     }
