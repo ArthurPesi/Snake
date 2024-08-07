@@ -71,7 +71,7 @@ int gameover(struct Game *currFrame) {
     const int y = snake->position[snake->head][1];
     if(currFrame->map[x][y] == '|' || currFrame->map[x][y] == 'S') {
         return 1;
-    } //se a cobra encostar em si mesma
+    } 
     return 0;
 }
 
@@ -172,7 +172,7 @@ struct Game *initializeGame() {
 }
 
 void delayFrame() {
-    double frameDuration = 0.5f;
+    double frameDuration = 0.42f;
     double timeTaken;
     clock_t start = clock();
     do {
