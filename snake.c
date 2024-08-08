@@ -20,8 +20,32 @@ struct Game{
     int mapSize;
     char map[8][8];
     int apple[2];
+    struct RenderingBuffer *renderingBuffer;
     struct Snake *snake;
 };
+
+struct RenderingBuffer {
+    int head;
+    int x[3];
+    int y[3];
+    char sprite[3];
+};
+
+void pop(struct RenderingBuffer *stack) {
+    if(stack->head > -1) {
+        stack->head--;
+    }
+}
+
+void push(struct RenderingBuffer *stack, char value, int x, int y) {
+    int tupleSize = sizeof(stack->x) / sizeof(int);
+    if(stack->head < tupleSize) {
+        stack->head++;
+        stack->x[stack->head] = x;
+        stack->y[stack->head] = y;
+        stack->sprite[stack->head] = value;
+    }
+}
 
 void renderFrame(struct Game *frame) {
     system("cls");
@@ -40,6 +64,22 @@ void renderFrame(struct Game *frame) {
             }
         }
         printf("\n");
+    }
+}
+
+void renderNewFrame(struct Game *frame) {
+    struct RenderingBuffer *buffer = frame->renderingBuffer;
+
+    while(buffer->head >= 0) {
+        int i = buffer->head;
+        int collumn = buffer->y[i];
+        int row = buffer->x[i];
+        char letter = buffer->sprite[i];
+
+        printf("\33[%d;%dH%c", row +1 , collumn * 2, letter);
+        printf("\33[%d;%dH%c", row +1, collumn * 2 +1, letter);
+
+        pop(buffer);
     }
 }
 
@@ -63,6 +103,7 @@ void sortApplePosition(struct Game *game) {
         game->apple[1] = (rand() % (game->mapSize - 3)) + 1;
     } while(appleCollision(game));
     game->map[game->apple[0]][game->apple[1]] = '6';
+    push(game->renderingBuffer, '6', game->apple[0], game->apple[1]);
 }
 
 int gameover(struct Game *currFrame) {
@@ -126,6 +167,7 @@ int moveSnake(struct Game *frame) {
         int tailX = snake->position[snake->tail][0];
         int tailY = snake->position[snake->tail][1];
         frame->map[tailX][tailY] = ' ';
+        push(frame->renderingBuffer, ' ', tailX, tailY);
         snake->tail = (snake->tail + 1) % snake->positionSize;
     }
     
@@ -139,16 +181,22 @@ int moveSnake(struct Game *frame) {
     int gameOver = gameover(frame);
 
     frame->map[dir[0]][dir[1]] = 'S';
+    push(frame->renderingBuffer, '[', dir[0], dir[1]);
     
     return gameOver;
 }
 
 struct Game *initializeGame() {
     struct Game *newGame = (struct Game*)calloc(sizeof(struct Game),1);
+    newGame->renderingBuffer = (struct RenderingBuffer*)calloc(sizeof(struct RenderingBuffer),1);
+    newGame->renderingBuffer->head = -1;
+
     newGame->mapSize = sizeof(newGame->map)/sizeof(newGame->map[0]);
+
     int snakeMaxSize = newGame->mapSize * newGame->mapSize;
     newGame->snake = (struct Snake*)calloc(sizeof(struct Snake) + snakeMaxSize * sizeof(int) * 2,1);
     newGame->snake->positionSize = snakeMaxSize;
+
     for(int i = 0; i < newGame->mapSize; i++) {
         for(int j = 0; j < newGame->mapSize; j++) {
             if(j == 0 || i == 0 || j == newGame->mapSize -1 || i == newGame->mapSize -1) {
@@ -183,13 +231,15 @@ void delayFrame() {
 int main() {
     struct Game *game = initializeGame();
     renderFrame(game);
+    
     while(1) {
         delayFrame();
         if(moveSnake(game)) {
             break;
         }
-        renderFrame(game);
+        renderNewFrame(game);
     }
+    free(game->renderingBuffer);
     free(game->snake);
     free(game);
     return 0;
